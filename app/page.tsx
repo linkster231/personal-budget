@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MonthSwitcher } from "@/components/dashboard/month-switcher";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
-import { UpcomingBills } from "@/components/dashboard/upcoming-bills";
+import { UpcomingItems } from "@/components/dashboard/upcoming-items";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { CashFlowChart } from "@/components/dashboard/cash-flow-chart";
+import { BalanceCard } from "@/components/dashboard/balance-card";
 import { IncomeForm } from "@/components/forms/income-form";
 import { ExpenseForm } from "@/components/forms/expense-form";
 import { useBudget } from "@/lib/store";
@@ -40,6 +41,8 @@ export default function DashboardPage() {
         </div>
         <MonthSwitcher month={month} onChange={setMonth} />
       </header>
+
+      <BalanceCard />
 
       <SummaryCards income={income} spent={spent} remaining={income - spent} currency={currency} />
 
@@ -78,7 +81,7 @@ export default function DashboardPage() {
       <CashFlowChart />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <UpcomingBills />
+        <UpcomingItems />
         <RecentActivity />
       </div>
     </div>

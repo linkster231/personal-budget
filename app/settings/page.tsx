@@ -1,13 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Download, Upload, RefreshCw, Moon, Sun, Laptop } from "lucide-react";
+import { Download, Upload, RefreshCw, Moon, Sun, Laptop, Bell, BellOff, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useBudget } from "@/lib/store";
 import { useHydrated } from "@/lib/use-hydrated";
+import {
+  notificationState,
+  requestNotificationPermission,
+  type NotificationPermissionState,
+} from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -19,9 +25,16 @@ export default function SettingsPage() {
   const resetAll = useBudget((s) => s.resetAll);
 
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [notifState, setNotifState] = useState<NotificationPermissionState>("default");
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!hydrated) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  // Resolve notification permission state on the client
+  if (typeof window !== "undefined" && notifState === "default") {
+    const current = notificationState();
+    if (current !== notifState) setNotifState(current);
+  }
 
   function download() {
     const blob = new Blob([exportJSON()], { type: "application/json" });
@@ -42,13 +55,24 @@ export default function SettingsPage() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  async function toggleNotifications(on: boolean) {
+    if (on) {
+      const state = await requestNotificationPermission();
+      setNotifState(state);
+      setSettings({ notificationsEnabled: state === "granted" });
+    } else {
+      setSettings({ notificationsEnabled: false });
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Theme, baseline income, and your data.</p>
+        <p className="text-sm text-muted-foreground">Theme, balance, notifications, and data.</p>
       </header>
 
+      {/* Theme */}
       <Card>
         <CardHeader>
           <CardTitle>Theme</CardTitle>
@@ -62,6 +86,34 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Starting balance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            Starting balance
+          </CardTitle>
+          <CardDescription>
+            Your current cash position across checking/savings. Powers the balance projection.
+            Update whenever you reconcile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-xs space-y-1.5">
+            <Label htmlFor="start-balance">Current balance ({settings.currency})</Label>
+            <Input
+              id="start-balance"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={settings.startingBalance}
+              onChange={(e) => setSettings({ startingBalance: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Baseline income */}
       <Card>
         <CardHeader>
           <CardTitle>Baseline income</CardTitle>
@@ -85,6 +137,41 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {settings.notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+            Notifications
+          </CardTitle>
+          <CardDescription>
+            When enabled, the app reminds you to log scheduled items when you open it.
+            On iPhone: works after adding the app to the Home Screen (iOS 16.4+).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Remind me to log scheduled items</Label>
+            <Switch
+              checked={settings.notificationsEnabled && notifState === "granted"}
+              onCheckedChange={toggleNotifications}
+              disabled={notifState === "unsupported" || notifState === "denied"}
+            />
+          </div>
+          {notifState === "unsupported" && (
+            <p className="text-xs text-muted-foreground">
+              This browser doesn&apos;t support notifications.
+            </p>
+          )}
+          {notifState === "denied" && (
+            <p className="text-xs text-destructive">
+              Notifications blocked in browser settings. Enable them there first.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Your data */}
       <Card>
         <CardHeader>
           <CardTitle>Your data</CardTitle>

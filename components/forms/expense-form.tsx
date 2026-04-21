@@ -10,16 +10,12 @@ import { DialogClose } from "@/components/ui/dialog";
 
 export function ExpenseForm({ onDone }: { onDone?: () => void }) {
   const categories = useBudget((s) => s.categories);
-  const bills = useBudget((s) => s.bills);
   const addExpense = useBudget((s) => s.addExpense);
 
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [billId, setBillId] = useState<string | "none">("none");
   const [notes, setNotes] = useState("");
-
-  const eligibleBills = bills.filter((b) => b.isActive && b.categoryId === categoryId);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +25,6 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
       categoryId,
       amount: n,
       date: new Date(date).toISOString(),
-      billId: billId === "none" ? undefined : billId,
       notes: notes || undefined,
     });
     onDone?.();
@@ -39,7 +34,7 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
     <form onSubmit={submit} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="category">Category</Label>
-        <Select value={categoryId} onValueChange={(v) => { setCategoryId(v); setBillId("none"); }}>
+        <Select value={categoryId} onValueChange={setCategoryId}>
           <SelectTrigger id="category">
             <SelectValue placeholder="Pick a category" />
           </SelectTrigger>
@@ -70,24 +65,6 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
         <Label htmlFor="date">Date</Label>
         <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
-      {eligibleBills.length > 0 && (
-        <div className="space-y-1.5">
-          <Label htmlFor="bill">Paying a bill?</Label>
-          <Select value={billId} onValueChange={setBillId}>
-            <SelectTrigger id="bill">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Not a bill payment</SelectItem>
-              {eligibleBills.map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
       <div className="space-y-1.5">
         <Label htmlFor="notes">Notes (optional)</Label>
         <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />

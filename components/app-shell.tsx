@@ -2,16 +2,50 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Wallet, Receipt, Target, Settings, PiggyBank } from "lucide-react";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Repeat,
+  Wallet,
+  Receipt,
+  Target,
+  Settings,
+  PiggyBank,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBudget } from "@/lib/store";
+import { useHydrated } from "@/lib/use-hydrated";
+import { pendingActionCount } from "@/lib/selectors";
 
-const nav = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/income", label: "Income", icon: Wallet },
-  { href: "/expenses", label: "Expenses", icon: Receipt },
-  { href: "/budget", label: "Budget", icon: Target },
-  { href: "/settings", label: "Settings", icon: Settings },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  showMobile?: boolean;
+};
+
+const NAV: NavItem[] = [
+  { href: "/", label: "Home", icon: LayoutDashboard, showMobile: true },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays, showMobile: true },
+  { href: "/recurring", label: "Recurring", icon: Repeat, showMobile: true },
+  { href: "/income", label: "Income", icon: Wallet, showMobile: false },
+  { href: "/expenses", label: "Expenses", icon: Receipt, showMobile: false },
+  { href: "/budget", label: "Budget", icon: Target, showMobile: true },
+  { href: "/settings", label: "Settings", icon: Settings, showMobile: true },
 ];
+
+function usePendingCount(): number {
+  const hydrated = useHydrated();
+  const schedules = useBudget((s) => s.schedules);
+  const incomeEntries = useBudget((s) => s.incomeEntries);
+  const expenses = useBudget((s) => s.expenses);
+  const skipped = useBudget((s) => s.skippedScheduleInstances);
+  if (!hydrated) return 0;
+  return pendingActionCount(
+    { schedules, incomeEntries, expenses, skippedScheduleInstances: skipped },
+    new Date(),
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function Sidebar() {
   const pathname = usePathname();
+  const pending = usePendingCount();
   return (
     <aside className="hidden md:flex md:w-60 md:flex-col md:border-r md:bg-card md:px-4 md:py-6">
       <Link href="/" className="mb-8 flex items-center gap-2 px-2">
@@ -34,8 +69,9 @@ function Sidebar() {
         <span className="text-lg font-semibold">Budget</span>
       </Link>
       <nav className="flex flex-col gap-1">
-        {nav.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const showBadge = href === "/recurring" && pending > 0;
           return (
             <Link
               key={href}
@@ -48,7 +84,12 @@ function Sidebar() {
               )}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {showBadge && (
+                <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                  {pending}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -59,25 +100,33 @@ function Sidebar() {
 
 function MobileTabs() {
   const pathname = usePathname();
+  const pending = usePendingCount();
+  const items = NAV.filter((n) => n.showMobile);
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur md:hidden">
       <div
         className="mx-auto flex max-w-lg items-stretch justify-around"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {nav.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const showBadge = href === "/recurring" && pending > 0;
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs transition-colors",
+                "relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs transition-colors",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
               <Icon className="h-5 w-5" />
               <span>{label}</span>
+              {showBadge && (
+                <span className="absolute right-[18%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold text-destructive-foreground">
+                  {pending}
+                </span>
+              )}
             </Link>
           );
         })}

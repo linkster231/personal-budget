@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { ThemeInitializer } from "@/components/theme-initializer";
+import { NotificationProbe } from "@/components/notification-probe";
 
 export const metadata: Metadata = {
   title: "Personal Budget",
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeInitializer />
+        <NotificationProbe />
         <AppShell>{children}</AppShell>
       </body>
     </html>
