@@ -123,37 +123,35 @@ function allocateLastMonth(
   categories: Category[],
   pool: number,
 ): AllocationResult {
-  // TODO(learning-mode): Implement the "last month's income" allocation.
-  //
-  // Contract:
-  //   - `pool` is LAST MONTH's total earned income, used to budget THIS month.
-  //   - Fund each category up to its `targetMonthly` in priority order
-  //     (categories with lower `priority` number are funded first).
-  //   - If income runs out mid-list, stop (don't partially fund unless YOU want to).
-  //   - Any income LEFT OVER after all targets are met should spill into the
-  //     first `savings`-kind category (there may be zero or more).
-  //   - Return the allocations map, the unallocated amount, and a short note.
-  //
-  // WHY THIS DECISION MATTERS:
-  //   "Last month's income" funding is the most conservative variable-income
-  //   strategy — you only spend money you've actually received. The subtlety
-  //   is: what to do with the leftover. Three approaches you could pick:
-  //
-  //     a) Dump 100% of leftover into the FIRST savings category (simple)
-  //     b) Split leftover evenly across ALL savings categories (egalitarian)
-  //     c) Fill each savings category to its targetMonthly first, THEN spill
-  //        the remainder into the first savings category (target-aware)
-  //
-  //   Option (c) is the most sophisticated — it respects that you may have
-  //   multiple savings goals (emergency fund, vacation fund, etc.) with
-  //   different targets. Option (a) is the easiest. Your call.
-  //
-  // Tip: look at `allocatePriority` above — you can call it to do the
-  // first-pass target funding, then handle the leftover yourself.
+  // Strategy: fund all category targets in priority order, then dump any
+  // remaining dollars into the first (lowest-priority-number) savings
+  // category. If there are no savings categories, leave it unallocated.
+  const base = allocatePriority(categories, pool);
+  const leftover = base.unallocated;
 
-  throw new Error(
-    "allocateLastMonth not implemented — see TODO in lib/budget-engine.ts",
-  );
+  const firstSavings = categories
+    .filter((c) => c.kind === "savings")
+    .sort((a, b) => a.priority - b.priority)[0];
+
+  if (!firstSavings || leftover <= 0) {
+    return {
+      allocations: base.allocations,
+      unallocated: leftover,
+      note:
+        leftover > 0
+          ? `All targets funded — $${leftover.toFixed(2)} unallocated (no savings category set).`
+          : `All targets funded from last month's income; pool fully used.`,
+    };
+  }
+
+  return {
+    allocations: {
+      ...base.allocations,
+      [firstSavings.id]: (base.allocations[firstSavings.id] ?? 0) + leftover,
+    },
+    unallocated: 0,
+    note: `All targets funded; $${leftover.toFixed(2)} swept into "${firstSavings.name}".`,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
