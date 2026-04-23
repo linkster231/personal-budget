@@ -29,6 +29,17 @@ export type Category = {
   priority: number;
   color?: string;
   icon?: string;
+  /**
+   * For sinking-fund categories only: user's current earmarked balance for
+   * this fund. Optional; undefined means "not tracking" (skip the ring).
+   */
+  fundBalance?: number;
+};
+
+/** One row in a paycheck-split preset: put N% of an income event toward a category. */
+export type PaycheckSplit = {
+  categoryId: string;
+  percent: number; // 0..100
 };
 
 export type Expense = {
@@ -131,6 +142,12 @@ export type Settings = {
   theme: "light" | "dark" | "system";
   /** Granted permission to show browser notifications. */
   notificationsEnabled: boolean;
+  /**
+   * Saved "paycheck split" template — informational preview shown when logging
+   * income with split-toggle on. Does not auto-post any entries; purely for
+   * awareness (envelopes are tracked via category targets + fund balances).
+   */
+  paycheckSplitPresets?: PaycheckSplit[];
 };
 
 export type BudgetState = {

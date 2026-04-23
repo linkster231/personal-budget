@@ -14,6 +14,7 @@ import {
   requestNotificationPermission,
   type NotificationPermissionState,
 } from "@/lib/notifications";
+import { PaycheckSplitEditor } from "@/components/settings/paycheck-split-editor";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -136,6 +137,9 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Paycheck split presets */}
+      <PaycheckSplitEditor />
 
       {/* Notifications */}
       <Card>

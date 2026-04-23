@@ -10,6 +10,7 @@ import { UpcomingItems } from "@/components/dashboard/upcoming-items";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { CashFlowChart } from "@/components/dashboard/cash-flow-chart";
 import { BalanceCard } from "@/components/dashboard/balance-card";
+import { SafeToSpendCard } from "@/components/dashboard/safe-to-spend-card";
 import { IncomeForm } from "@/components/forms/income-form";
 import { ExpenseForm } from "@/components/forms/expense-form";
 import { useBudget } from "@/lib/store";
@@ -41,6 +42,8 @@ export default function DashboardPage() {
         </div>
         <MonthSwitcher month={month} onChange={setMonth} />
       </header>
+
+      <SafeToSpendCard />
 
       <BalanceCard />
 

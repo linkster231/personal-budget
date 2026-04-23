@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Info } from "lucide-react";
+import Link from "next/link";
+import { Plus, Trash2, Info, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ColorDot, ColorPicker } from "@/components/ui/color-picker";
 import { CategoryForm } from "@/components/forms/category-form";
+import { PacingText } from "@/components/budget/pacing-text";
+import { SinkingFundRing } from "@/components/budget/sinking-fund-ring";
 import { useBudget } from "@/lib/store";
 import { useHydrated } from "@/lib/use-hydrated";
 import { formatCurrency, monthKey, prevMonthKey, monthLabel } from "@/lib/format";
@@ -58,9 +61,17 @@ export default function BudgetPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Budget plan</h1>
-        <p className="text-sm text-muted-foreground">Pick a strategy, set targets, track spending.</p>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Budget plan</h1>
+          <p className="text-sm text-muted-foreground">Pick a strategy, set targets, track spending.</p>
+        </div>
+        <Link href="/whatif">
+          <Button variant="outline" size="sm">
+            <Sparkles className="h-4 w-4" />
+            What-if scenarios
+          </Button>
+        </Link>
       </header>
 
       <Card>
@@ -282,7 +293,34 @@ function CategoryRow({
             <div className={cn("h-full transition-all", toneBg)} style={{ width: `${Math.min(100, pct)}%` }} />
           )}
         </div>
+        <div className="flex items-center justify-between">
+          <PacingText spent={spent} target={target} currency={currency} />
+        </div>
       </div>
+
+      {/* Sinking-fund ring + balance editor */}
+      {category.kind === "sinking" && (
+        <div className="mt-1 flex items-center gap-4 rounded-lg border bg-muted/30 p-2">
+          <SinkingFundRing category={category} currency={currency} />
+          <div className="flex-1 space-y-0.5">
+            <Label className="text-[10px] uppercase">Fund balance</Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              className="h-9 w-full text-sm"
+              placeholder="0.00"
+              value={category.fundBalance ?? ""}
+              onChange={(e) =>
+                onUpdate({
+                  fundBalance: e.target.value === "" ? undefined : parseFloat(e.target.value) || 0,
+                })
+              }
+            />
+          </div>
+        </div>
+      )}
     </li>
   );
 }

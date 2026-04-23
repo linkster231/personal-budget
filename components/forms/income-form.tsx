@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBudget } from "@/lib/store";
 import { DialogClose } from "@/components/ui/dialog";
+import { PaycheckSplitSection } from "@/components/forms/paycheck-split-section";
 
 export function IncomeForm({ onDone }: { onDone?: () => void }) {
   const sources = useBudget((s) => s.incomeSources);
@@ -64,6 +65,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
         <Label htmlFor="notes">Notes (optional)</Label>
         <Input id="notes" placeholder="Client name, hours, etc." value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
+      <PaycheckSplitSection amount={parseFloat(amount) || 0} />
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
           <Button type="button" variant="ghost">

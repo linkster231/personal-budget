@@ -68,6 +68,8 @@ type Actions = {
   exportJSON: () => string;
   importJSON: (json: string) => { ok: true } | { ok: false; error: string };
   resetAll: () => void;
+  /** Replace the entire canonical dataset. Used by what-if apply. */
+  bulkReplace: (next: BudgetState) => void;
 };
 
 export type Store = BudgetState & Actions;
@@ -292,6 +294,7 @@ export const useBudget = create<Store>()(
         }
       },
       resetAll: () => set(createInitialState()),
+      bulkReplace: (next) => set(next),
     }),
     {
       name: "personal-budget-v1",
