@@ -17,6 +17,8 @@ export type IncomeEntry = {
   notes?: string;
   /** Key of the schedule instance this entry posted, if any: `<scheduleId>:<YYYY-MM-DD>`. */
   scheduleInstanceKey?: string;
+  /** Free-form labels for second-dimension grouping. Lowercase recommended. */
+  tags?: string[];
 };
 
 export type CategoryKind = "fixed" | "variable" | "sinking" | "savings";
@@ -52,6 +54,21 @@ export type Expense = {
   scheduleInstanceKey?: string;
   /** Legacy v1 field; preserved after migration for historical data. */
   billId?: string;
+  /** Free-form labels for second-dimension grouping. */
+  tags?: string[];
+};
+
+/**
+ * A saved "when you type X in the notes, categorize as Y" rule. Matching is
+ * case-insensitive substring by default. `count` tracks how often it's fired;
+ * `lastUsedAt` records freshness so the UI can show "unused" rules.
+ */
+export type PayeeRule = {
+  id: string;
+  pattern: string;
+  categoryId: string;
+  count: number;
+  lastUsedAt?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -163,4 +180,6 @@ export type BudgetState = {
   expenses: Expense[];
   plans: BudgetPlan[];
   settings: Settings;
+  /** v3+: Payee → category auto-categorization rules. */
+  payeeRules: PayeeRule[];
 };

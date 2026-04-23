@@ -2,7 +2,7 @@ import { uid } from "./utils";
 import { defaultColorFor } from "./colors";
 import type { BudgetState, Category, IncomeSource } from "./types";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 function seedCategories(): Category[] {
   const base: Array<Omit<Category, "id" | "color">> = [
@@ -44,5 +44,6 @@ export function createInitialState(): BudgetState {
       theme: "system",
       notificationsEnabled: false,
     },
+    payeeRules: [],
   };
 }

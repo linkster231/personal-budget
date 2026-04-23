@@ -15,6 +15,7 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { PaycheckSplitEditor } from "@/components/settings/paycheck-split-editor";
+import { PayeeRulesEditor } from "@/components/settings/payee-rules-editor";
 import { buildICS } from "@/lib/ics-export";
 import { cn } from "@/lib/utils";
 
@@ -153,6 +154,9 @@ export default function SettingsPage() {
 
       {/* Paycheck split presets */}
       <PaycheckSplitEditor />
+
+      {/* Payee rules */}
+      <PayeeRulesEditor />
 
       {/* Notifications */}
       <Card>

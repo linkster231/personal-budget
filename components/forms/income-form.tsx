@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useBudget } from "@/lib/store";
 import { DialogClose } from "@/components/ui/dialog";
 import { PaycheckSplitSection } from "@/components/forms/paycheck-split-section";
+import { TagInput } from "@/components/forms/tag-input";
 
 export function IncomeForm({ onDone }: { onDone?: () => void }) {
   const sources = useBudget((s) => s.incomeSources);
@@ -17,12 +18,19 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const n = parseFloat(amount);
     if (!sourceId || isNaN(n) || n <= 0) return;
-    addIncomeEntry({ sourceId, amount: n, date: new Date(date).toISOString(), notes: notes || undefined });
+    addIncomeEntry({
+      sourceId,
+      amount: n,
+      date: new Date(date).toISOString(),
+      notes: notes || undefined,
+      tags: tags.length > 0 ? tags : undefined,
+    });
     onDone?.();
   }
 
@@ -64,6 +72,10 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
       <div className="space-y-1.5">
         <Label htmlFor="notes">Notes (optional)</Label>
         <Input id="notes" placeholder="Client name, hours, etc." value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Tags (optional)</Label>
+        <TagInput value={tags} onChange={setTags} />
       </div>
       <PaycheckSplitSection amount={parseFloat(amount) || 0} />
       <div className="flex justify-end gap-2 pt-2">

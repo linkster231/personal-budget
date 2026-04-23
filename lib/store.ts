@@ -9,6 +9,7 @@ import type {
   Expense,
   IncomeEntry,
   IncomeSource,
+  PayeeRule,
   RecurringSchedule,
   Settings,
   Strategy,
@@ -64,6 +65,12 @@ type Actions = {
   setStrategy: (s: Strategy) => void;
   setSettings: (patch: Partial<Settings>) => void;
 
+  // payee rules
+  addPayeeRule: (r: Omit<PayeeRule, "id" | "count">) => void;
+  updatePayeeRule: (id: string, patch: Partial<PayeeRule>) => void;
+  removePayeeRule: (id: string) => void;
+  recordPayeeRuleHit: (id: string) => void;
+
   // data
   exportJSON: () => string;
   importJSON: (json: string) => { ok: true } | { ok: false; error: string };
@@ -108,8 +115,8 @@ function migrateV1toV2(v1: any): BudgetState {
   }));
 
   const base = createInitialState();
-  return {
-    version: SCHEMA_VERSION,
+  const v2 = {
+    version: 2,
     incomeSources,
     incomeEntries: v1.incomeEntries ?? [],
     categories,
@@ -118,6 +125,26 @@ function migrateV1toV2(v1: any): BudgetState {
     expenses: v1.expenses ?? [],
     plans: v1.plans ?? [],
     settings: { ...base.settings, ...(v1.settings ?? {}) },
+  };
+  return migrateV2toV3(v2);
+}
+
+/**
+ * v2 → v3 migration: add empty `tags: []` to every entry and an empty
+ * `payeeRules: []` at the top level. Everything else passes through.
+ */
+function migrateV2toV3(v2: any): BudgetState {
+  return {
+    version: SCHEMA_VERSION,
+    incomeSources: v2.incomeSources ?? [],
+    incomeEntries: (v2.incomeEntries ?? []).map((e: IncomeEntry) => ({ ...e, tags: e.tags ?? [] })),
+    categories: v2.categories ?? [],
+    schedules: v2.schedules ?? [],
+    skippedScheduleInstances: v2.skippedScheduleInstances ?? [],
+    expenses: (v2.expenses ?? []).map((e: Expense) => ({ ...e, tags: e.tags ?? [] })),
+    plans: v2.plans ?? [],
+    settings: v2.settings ?? createInitialState().settings,
+    payeeRules: v2.payeeRules ?? [],
   };
 }
 
@@ -243,6 +270,28 @@ export const useBudget = create<Store>()(
       setSettings: (patch) =>
         set((st) => ({ settings: { ...st.settings, ...patch } })),
 
+      addPayeeRule: (r) =>
+        set((st) => ({
+          payeeRules: [
+            ...st.payeeRules,
+            { ...r, id: uid(), count: 0 },
+          ],
+        })),
+      updatePayeeRule: (id, patch) =>
+        set((st) => ({
+          payeeRules: st.payeeRules.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+        })),
+      removePayeeRule: (id) =>
+        set((st) => ({ payeeRules: st.payeeRules.filter((x) => x.id !== id) })),
+      recordPayeeRuleHit: (id) =>
+        set((st) => ({
+          payeeRules: st.payeeRules.map((x) =>
+            x.id === id
+              ? { ...x, count: x.count + 1, lastUsedAt: new Date().toISOString() }
+              : x,
+          ),
+        })),
+
       exportJSON: () => {
         const st = get();
         const snapshot = {
@@ -255,6 +304,7 @@ export const useBudget = create<Store>()(
           expenses: st.expenses,
           plans: st.plans,
           settings: st.settings,
+          payeeRules: st.payeeRules,
           exportedAt: new Date().toISOString(),
         };
         return JSON.stringify(snapshot, null, 2);
@@ -278,9 +328,12 @@ export const useBudget = create<Store>()(
               expenses: parsed.expenses ?? [],
               plans: parsed.plans ?? [],
               settings: { ...base.settings, ...(parsed.settings ?? {}) },
+              payeeRules: parsed.payeeRules ?? [],
             };
           } else if (parsed.version === 1) {
             next = migrateV1toV2(parsed);
+          } else if (parsed.version === 2) {
+            next = migrateV2toV3(parsed);
           } else {
             return {
               ok: false,
@@ -302,6 +355,7 @@ export const useBudget = create<Store>()(
       version: SCHEMA_VERSION,
       migrate: (persisted: any, version) => {
         if (version < 2) return migrateV1toV2(persisted);
+        if (version < 3) return migrateV2toV3(persisted);
         return persisted as BudgetState;
       },
     },

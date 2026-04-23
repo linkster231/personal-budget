@@ -11,6 +11,7 @@ import {
   Target,
   Settings,
   PiggyBank,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBudget } from "@/lib/store";
@@ -30,7 +31,8 @@ const NAV: NavItem[] = [
   { href: "/recurring", label: "Recurring", icon: Repeat, showMobile: true },
   { href: "/income", label: "Income", icon: Wallet, showMobile: false },
   { href: "/expenses", label: "Expenses", icon: Receipt, showMobile: false },
-  { href: "/budget", label: "Budget", icon: Target, showMobile: true },
+  { href: "/budget", label: "Budget", icon: Target, showMobile: false },
+  { href: "/reports", label: "Reports", icon: BarChart3, showMobile: true },
   { href: "/settings", label: "Settings", icon: Settings, showMobile: true },
 ];
 

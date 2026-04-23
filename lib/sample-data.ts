@@ -119,5 +119,6 @@ export function createSampleState(): BudgetState {
         { categoryId: savings, percent: 15 },
       ],
     },
+    payeeRules: [],
   };
 }
