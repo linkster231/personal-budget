@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Download, Upload, RefreshCw, Moon, Sun, Laptop, Bell, BellOff, Wallet } from "lucide-react";
+import { Download, Upload, RefreshCw, Moon, Sun, Laptop, Bell, BellOff, Wallet, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications";
 import { PaycheckSplitEditor } from "@/components/settings/paycheck-split-editor";
+import { buildICS } from "@/lib/ics-export";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -24,6 +25,7 @@ export default function SettingsPage() {
   const exportJSON = useBudget((s) => s.exportJSON);
   const importJSON = useBudget((s) => s.importJSON);
   const resetAll = useBudget((s) => s.resetAll);
+  const wholeState = useBudget();
 
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [notifState, setNotifState] = useState<NotificationPermissionState>("default");
@@ -43,6 +45,17 @@ export default function SettingsPage() {
     const a = document.createElement("a");
     a.href = url;
     a.download = `budget-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadICS() {
+    const ics = buildICS(wholeState);
+    const blob = new Blob([ics], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `budget-bills-${new Date().toISOString().slice(0, 10)}.ics`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -162,6 +175,19 @@ export default function SettingsPage() {
               disabled={notifState === "unsupported" || notifState === "denied"}
             />
           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Weekly check-in reminder</Label>
+              <p className="text-[11px] text-muted-foreground">
+                A gentle nudge once a week to log anything you missed.
+              </p>
+            </div>
+            <Switch
+              checked={settings.weeklyReminderEnabled === true && settings.notificationsEnabled && notifState === "granted"}
+              onCheckedChange={(v) => setSettings({ weeklyReminderEnabled: v })}
+              disabled={!settings.notificationsEnabled || notifState !== "granted"}
+            />
+          </div>
           {notifState === "unsupported" && (
             <p className="text-xs text-muted-foreground">
               This browser doesn&apos;t support notifications.
@@ -172,6 +198,27 @@ export default function SettingsPage() {
               Notifications blocked in browser settings. Enable them there first.
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Calendar export */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Sync to Calendar app
+          </CardTitle>
+          <CardDescription>
+            Export all active recurring schedules as an <code>.ics</code> file — open it on
+            iPhone or Mac to add bills + paydays to your native Calendar with built-in
+            reminders. Re-export whenever you change schedules.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={downloadICS} variant="outline">
+            <Download className="h-4 w-4" />
+            Download .ics
+          </Button>
         </CardContent>
       </Card>
 

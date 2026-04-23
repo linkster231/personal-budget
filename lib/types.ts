@@ -142,6 +142,8 @@ export type Settings = {
   theme: "light" | "dark" | "system";
   /** Granted permission to show browser notifications. */
   notificationsEnabled: boolean;
+  /** Fire a weekly check-in reminder push (requires notificationsEnabled). */
+  weeklyReminderEnabled?: boolean;
   /**
    * Saved "paycheck split" template — informational preview shown when logging
    * income with split-toggle on. Does not auto-post any entries; purely for
