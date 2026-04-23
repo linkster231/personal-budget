@@ -68,7 +68,25 @@ export function BalanceCard() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-40 w-full">
+        <div
+          className="h-40 w-full"
+          role="img"
+          aria-label={(() => {
+            if (data.length === 0) return "Balance projection chart with no data.";
+            const first = data[0];
+            const last = data[data.length - 1];
+            const min = data.reduce((m, p) => (p.balance < m.balance ? p : m), first);
+            const parts = [
+              `Projected balance over the next ${data.length} days.`,
+              `Starting at ${formatCurrency(first.balance, state.settings.currency)} on ${first.label}.`,
+              `Ending at ${formatCurrency(last.balance, state.settings.currency)} on ${last.label}.`,
+            ];
+            if (min.balance < first.balance) {
+              parts.push(`Low point of ${formatCurrency(min.balance, state.settings.currency)} on ${min.label}.`);
+            }
+            return parts.join(" ");
+          })()}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
               <defs>

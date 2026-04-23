@@ -78,7 +78,36 @@
 }
 
 @layer utilities {
-  .tabular-nums {
+  .tabular-nums,
+  .num-tabular {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Respect the user's OS-level reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* iOS: prevent zoom-on-focus for text-like inputs. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* iOS: ensure tappable elements have a minimum 44pt hit area on touch. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
   }
 }

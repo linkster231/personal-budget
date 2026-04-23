@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { IconPicker } from "@/components/ui/icon-picker";
+import { CategoryAvatar } from "@/components/ui/category-avatar";
 import { useBudget } from "@/lib/store";
 import { DialogClose } from "@/components/ui/dialog";
 import { defaultColorFor } from "@/lib/colors";
+import { DEFAULT_ICON, type IconName } from "@/lib/icons";
 import type { CategoryKind } from "@/lib/types";
 
 export function CategoryForm({ onDone }: { onDone?: () => void }) {
@@ -20,21 +23,25 @@ export function CategoryForm({ onDone }: { onDone?: () => void }) {
   const [target, setTarget] = useState("");
   const [priority, setPriority] = useState(String(existingCount + 1));
   const [color, setColor] = useState<string>(defaultColorFor(existingCount));
+  const [icon, setIcon] = useState<IconName>(DEFAULT_ICON);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const t = parseFloat(target);
     const p = parseInt(priority, 10);
     if (!name || isNaN(t) || t < 0 || isNaN(p)) return;
-    addCategory({ name, kind, targetMonthly: t, priority: p, color });
+    addCategory({ name, kind, targetMonthly: t, priority: p, color, icon });
     onDone?.();
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
-        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+      <div className="flex items-center gap-3">
+        <CategoryAvatar color={color} icon={icon} size={44} />
+        <div className="flex-1 space-y-1.5">
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        </div>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="kind">Kind</Label>
@@ -63,6 +70,10 @@ export function CategoryForm({ onDone }: { onDone?: () => void }) {
       <div className="space-y-1.5">
         <Label>Color</Label>
         <ColorPicker value={color} onChange={setColor} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Icon</Label>
+        <IconPicker value={icon} onChange={setIcon} />
       </div>
       <p className="text-xs text-muted-foreground">
         Lower priority numbers are funded first. Sinking-fund tip: divide the annual cost by 12.

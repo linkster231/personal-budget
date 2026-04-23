@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useBudget } from "@/lib/store";
 import { useHydrated } from "@/lib/use-hydrated";
-import { monthKey, formatCurrencyCompact } from "@/lib/format";
+import { monthKey, formatCurrencyCompact, formatCurrency } from "@/lib/format";
 
 /**
  * 6-month cash flow: bars for income and expenses by month.
@@ -23,6 +23,7 @@ export function CashFlowChart() {
   const hydrated = useHydrated();
   const income = useBudget((s) => s.incomeEntries);
   const expenses = useBudget((s) => s.expenses);
+  const currency = useBudget((s) => s.settings.currency);
 
   const data = useMemo(() => {
     const months: string[] = [];
@@ -47,7 +48,13 @@ export function CashFlowChart() {
         <CardDescription>Last 6 months</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-56 w-full">
+        <div
+          className="h-56 w-full"
+          role="img"
+          aria-label={`Cash flow bar chart for the last 6 months. ${data
+            .map((d) => `${d.month}: income ${formatCurrency(d.Income, currency)}, expenses ${formatCurrency(d.Expenses, currency)}`)
+            .join("; ")}`}
+        >
           {hydrated && (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
@@ -74,6 +81,26 @@ export function CashFlowChart() {
             </ResponsiveContainer>
           )}
         </div>
+        {/* Screen-reader + no-JS fallback data table */}
+        <table className="sr-only">
+          <caption>Cash flow, last 6 months</caption>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Income</th>
+              <th>Expenses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d) => (
+              <tr key={d.month}>
+                <td>{d.month}</td>
+                <td>{formatCurrency(d.Income, currency)}</td>
+                <td>{formatCurrency(d.Expenses, currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </CardContent>
     </Card>
   );
